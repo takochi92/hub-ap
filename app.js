@@ -375,8 +375,42 @@
     }).join("");
   }
 
+
+  function studioAvatar(index) {
+    var colors = ["#a7ea77","#58b5ff","#fa5bb9"];
+    var c = colors[index % colors.length];
+    var shape = index % 3 === 0
+      ? '<path d="M24 34Q19 11 33 17Q40 12 46 22Q53 12 64 17Q78 13 73 35Q88 60 73 75Q48 87 24 75Q8 60 24 34Z" fill="' + c + '"/>'
+      : index % 3 === 1
+      ? '<path d="M19 36Q15 18 32 20L65 16Q84 16 78 36L83 61Q83 80 65 81L30 82Q12 81 15 62Z" fill="' + c + '"/><path d="M23 21Q41 9 70 16" fill="none" stroke="#223241" stroke-width="8" stroke-linecap="round"/>'
+      : '<path d="M23 32L25 19 38 29Q48 25 59 29L73 19 75 35Q88 63 73 77Q49 87 24 76Q10 63 23 32Z" fill="' + c + '"/>';
+    return '<svg class="studio-avatar" viewBox="0 0 96 96" aria-hidden="true"><ellipse cx="48" cy="86" rx="27" ry="4" fill="' + c + '" opacity=".12"/>' + shape + '<ellipse cx="36" cy="49" rx="7" ry="9" fill="#0b0c12"/><ellipse cx="61" cy="49" rx="7" ry="9" fill="#0b0c12"/><circle cx="38" cy="46" r="2" fill="#fff" opacity=".8"/><circle cx="63" cy="46" r="2" fill="#fff" opacity=".8"/><path d="M41 66Q48 72 55 66" fill="none" stroke="#0b0c12" stroke-width="2.5" stroke-linecap="round"/></svg>';
+  }
+
+  function renderStudio() {
+    var tasks = log.tasks.filter(inProject);
+    var waiting = tasks.filter(function(t) {return t.status === "waiting";}).length;
+    var active = tasks.filter(function(t) {return t.status === "active";}).length;
+    var ready = log.tweets.filter(function(t) {return inProject(t) && t.status === "ready" && !isPosted(t);}).length;
+    var scheduled = (log.posts || []).filter(function(p) {return inProject(p) && p.status === "scheduled" && !isPosted(p);}).length;
+    var commits = log.days.reduce(function(n,d) {return n+d.commits.filter(inProject).length;},0);
+    function panel(label,title,value,detail,href,color) {
+      return '<a class="network-panel" style="--node:' + color + '" href="' + href + '"><span class="node-code">' + label + '</span><div class="node-heading"><strong>' + title + '</strong><span class="node-port"></span></div><div class="node-value">' + value + '<small>件</small></div><p>' + detail + '</p><span class="node-link">詳細を開く ↗</span></a>';
+    }
+    $("studio-sources").innerHTML = panel("01 / SOURCE","TASKS",tasks.length,"進行中 " + active + " · 操作待ち " + waiting,"#tasks-card","#a7ea77")
+      + panel("02 / SOURCE","WORK LOG",commits,"各プロジェクトの作業記録","#history-card","#58b5ff")
+      + panel("03 / SOURCE","SCHEDULE",scheduled,"これから公開する投稿","#posts-card","#fa5bb9");
+    $("studio-outputs").innerHTML = panel("04 / OUTPUT","POST QUEUE",ready,"投稿できる素材を確認","#tweets-card","#58b5ff")
+      + panel("05 / REVIEW","YOUR ACTION",waiting,"自分の操作が必要なタスク","#tasks-card","#fa5bb9")
+      + '<div class="network-panel" style="--node:#e7c88b"><span class="node-code">06 / DESTINATION</span><div class="node-heading"><strong>PROJECT SITES</strong><span class="node-port"></span></div><p>公開サイトを開く</p><div class="studio-site-links">' + log.projects.filter(function(p){return p.site;}).map(function(p){return '<a href="' + esc(p.site) + '" target="_blank" rel="noopener">' + esc(p.name) + ' ↗</a>';}).join("") + '</div></div>';
+    $("project-overview").querySelectorAll(".project-summary").forEach(function(el,i) {
+      if (!el.querySelector(".studio-avatar")) el.insertAdjacentHTML("afterbegin",'<div class="crew-label">PROJECT / ' + String(i+1).padStart(2,"0") + '</div>' + studioAvatar(i));
+    });
+  }
+
   function renderAll() {
     renderOverview();
+    renderStudio();
     renderMail();
     renderProjects();
     renderHero();

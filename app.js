@@ -209,8 +209,16 @@
   function fetchFiles(post) {
     if (post._files) return Promise.resolve(post._files);
     return Promise.all(post.images.map(function (url, i) {
-      return fetch(url).then(function (r) { return r.blob(); }).then(function (b) {
-        return new File([b], post.id + "-" + String(i + 1).padStart(2, "0") + ".jpg", { type: b.type || "image/jpeg" });
+      return fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("画像を取得できません（" + r.status + "）。時間をおいて再試行してください。");
+        return r.blob();
+      }).then(function (b) {
+        if (!b.size || !/^image\//i.test(b.type)) throw new Error("画像を読み込めませんでした。保存せず、再試行してください。");
+        return createImageBitmap(b).then(function (image) {
+          image.close();
+          var ext = { "image/png": "png", "image/webp": "webp", "image/gif": "gif" }[b.type] || "jpg";
+          return new File([b], post.id + "-" + String(i + 1).padStart(2, "0") + "." + ext, { type: b.type });
+        }, function () { throw new Error("壊れた画像を検出しました。保存を中止しました。"); });
       });
     })).then(function (files) { post._files = files; return files; });
   }

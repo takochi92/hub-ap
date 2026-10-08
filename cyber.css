@@ -1,0 +1,195 @@
+/* サイバー風の見た目（claude.css の上に重ねる）
+   黒地＋ネオン（シアン×マゼンタ）、流れるグリッド、走査線、グリッチ、角を切った枠 */
+
+:root, :root:not([data-theme="dark"]) {
+  color-scheme: dark;
+  --bg: #04050a;
+  --bg-2: rgba(8, 12, 22, 0.86);
+  --card: rgba(10, 18, 32, 0.62);
+  --card-line: rgba(0, 240, 255, 0.18);
+  --text: #e6fbff;
+  --muted: #7fa3b5;
+  --dim: #46627a;
+  --neon: #00f0ff;
+  --pink: #ff2bd6;
+  --coral: #ff2bd6;
+  --amber: #f5ff3b;
+  --cyan: #00f0ff;
+  --violet: #9d6bff;
+  --lime: #39ff88;
+  --glow: 0 0 0 1px rgba(0, 240, 255, 0.35), 0 0 24px -4px rgba(0, 240, 255, 0.45), inset 0 0 30px -18px rgba(255, 43, 214, 0.6);
+  --grad: linear-gradient(100deg, var(--neon), var(--pink) 55%, var(--amber));
+  --mono: "Share Tech Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --display: "Orbitron", "Share Tech Mono", var(--sans);
+  --cut: 14px;
+}
+
+html, body { overflow-x: clip; }
+body { background: var(--bg); }
+
+/* 背景：奥へ流れるグリッドの床 */
+body::before {
+  inset: auto -50vw -10vh -50vw;
+  width: auto;
+  height: 55vh;
+  background:
+    linear-gradient(transparent 0 calc(100% - 1px), rgba(255, 43, 214, 0.55) 0) 0 0 / 100% 48px,
+    linear-gradient(90deg, transparent 0 calc(100% - 1px), rgba(0, 240, 255, 0.45) 0) 0 0 / 48px 100%;
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(transparent, #000 70%);
+  mask-image: linear-gradient(transparent, #000 70%);
+  opacity: 0.35;
+  animation: grid-run 2.4s linear infinite;
+}
+@keyframes grid-run { to { background-position: 0 48px, 0 0; } }
+
+/* 背景：走査線とうっすらした光 */
+body::after {
+  inset: 0;
+  width: auto;
+  height: auto;
+  background:
+    repeating-linear-gradient(transparent 0 2px, rgba(0, 0, 0, 0.28) 2px 3px),
+    radial-gradient(60% 40% at 85% 0%, rgba(255, 43, 214, 0.18), transparent 70%),
+    radial-gradient(50% 40% at 0% 30%, rgba(0, 240, 255, 0.12), transparent 70%);
+  z-index: 70;
+  mix-blend-mode: multiply;
+  animation: flicker 6s infinite steps(1);
+}
+@keyframes flicker { 0%, 100% { opacity: 1; } 47% { opacity: 0.85; } 48% { opacity: 1; } 82% { opacity: 0.92; } }
+
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.5; }
+
+/* 角を切った枠 */
+.card, .hero, .tgroup, .tweet, .commit, .hs, .token-card {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+}
+.card { background: var(--card); border-color: var(--card-line); backdrop-filter: blur(3px); position: relative; }
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 18px; height: 18px;
+  border-left: 2px solid var(--neon);
+  border-top: 2px solid var(--neon);
+  filter: drop-shadow(0 0 4px var(--neon));
+}
+.card h2 { color: var(--neon); text-shadow: 0 0 8px rgba(0, 240, 255, 0.6); letter-spacing: 0.2em; }
+.card h2::before { content: "// "; color: var(--pink); }
+
+/* ブランド */
+.brand { font-family: var(--display); letter-spacing: 0.08em; }
+.brand img { filter: drop-shadow(0 0 6px var(--pink)) hue-rotate(250deg) saturate(1.6); animation: spin 14s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.brand small { color: var(--neon); }
+.live::before { background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+/* ヒーロー：回る光の枠 */
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.hero {
+  background:
+    linear-gradient(var(--bg-2), var(--bg-2)) padding-box,
+    conic-gradient(from var(--ang), var(--neon), var(--pink), var(--amber), var(--neon)) border-box;
+  border: 2px solid transparent;
+  animation: ang 5s linear infinite;
+}
+@keyframes ang { to { --ang: 360deg; } }
+.hero .eyebrow { color: var(--pink); font-family: var(--mono); }
+.hero .eyebrow::before { content: "▶ "; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.hero h1 { font-family: var(--display), var(--sans); position: relative; text-shadow: 0 0 12px rgba(0, 240, 255, 0.35); }
+.hero h1 .grad { filter: drop-shadow(0 0 8px rgba(255, 43, 214, 0.6)); }
+
+/* グリッチ（ときどき文字がずれる） */
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+.glitch::before { color: var(--pink); transform: translate(-2px, 0); clip-path: inset(0 0 55% 0); }
+.glitch::after { color: var(--neon); transform: translate(2px, 0); clip-path: inset(50% 0 0 0); }
+.glitch.on::before { opacity: 0.9; animation: g1 0.35s steps(2) 1; }
+.glitch.on::after { opacity: 0.9; animation: g2 0.35s steps(2) 1; }
+@keyframes g1 { 0% { transform: translate(-4px, -1px); } 50% { transform: translate(3px, 1px); clip-path: inset(10% 0 60% 0); } 100% { transform: translate(-1px, 0); } }
+@keyframes g2 { 0% { transform: translate(4px, 1px); } 50% { transform: translate(-3px, -1px); clip-path: inset(60% 0 5% 0); } 100% { transform: translate(1px, 0); } }
+
+/* 数字 */
+.hs { background: rgba(0, 240, 255, 0.04); border-color: rgba(0, 240, 255, 0.2); }
+.hs b { font-family: var(--display); text-shadow: 0 0 12px currentColor; }
+.hs.coral b { color: var(--pink); }
+.hs.cyan b { color: var(--neon); }
+.hs.amber b { color: var(--amber); }
+.hs.violet b { color: var(--violet); }
+
+/* ボタン・チップ */
+.pill-btn, .chip { border-radius: 0; font-family: var(--mono); letter-spacing: 0.05em; }
+.pill-btn:hover, .chip:hover { box-shadow: 0 0 12px rgba(0, 240, 255, 0.5); border-color: var(--neon); }
+.pill-btn.x { background: var(--neon); color: #001014; border-color: var(--neon); box-shadow: 0 0 16px rgba(0, 240, 255, 0.6); }
+.chip[aria-pressed="true"] { color: #001014; background: var(--neon); border-color: var(--neon); box-shadow: 0 0 14px rgba(0, 240, 255, 0.6); }
+.chip[style*="--p"][aria-pressed="true"] { background: var(--p); border-color: var(--p); color: #001014; box-shadow: 0 0 14px var(--p); }
+
+/* ステータス */
+.st { border-radius: 0; }
+.st-active { color: var(--pink); text-shadow: 0 0 6px var(--pink); }
+.st-waiting { color: var(--amber); animation: pulse-glow 1.6s ease-in-out infinite; }
+@keyframes pulse-glow { 50% { box-shadow: 0 0 10px var(--amber); } }
+.tgroup { background: rgba(4, 8, 16, 0.7); }
+.tbar i { box-shadow: 0 0 8px var(--p, var(--lime)); }
+
+/* ヒートマップ */
+.heat i { border-radius: 2px; }
+.heat i[data-l="1"] { background: rgba(0, 240, 255, 0.3); }
+.heat i[data-l="2"] { background: rgba(0, 240, 255, 0.6); }
+.heat i[data-l="3"] { background: var(--neon); box-shadow: 0 0 6px var(--neon); }
+.heat i[data-l="4"] { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
+.heat i.today { outline-color: var(--amber); animation: blink 1.2s steps(1) infinite; }
+
+/* タイムライン */
+.day::after { border-color: var(--neon); border-radius: 0; transform: rotate(45deg); }
+.day.is-today::after { background: var(--pink); border-color: var(--pink); box-shadow: 0 0 12px var(--pink); }
+.day::before { background: linear-gradient(var(--neon), transparent); opacity: 0.4; }
+.day-head h3 { font-family: var(--display); letter-spacing: 0.06em; }
+.commit { background: rgba(4, 8, 16, 0.75); border-radius: 0; }
+.commit:hover { box-shadow: -3px 0 14px -4px var(--k); }
+.file { border-radius: 0; }
+.file.A { border-color: var(--lime); color: var(--lime); text-shadow: 0 0 6px rgba(57, 255, 136, 0.5); }
+.new-badge { background: var(--pink); color: #fff; border-radius: 0; box-shadow: 0 0 10px var(--pink); animation: blink 1s steps(1) infinite; }
+
+/* ツイート */
+.tweet { background: rgba(4, 8, 16, 0.75); }
+.tweet.ready { border-color: var(--pink); box-shadow: inset 0 0 24px -12px var(--pink); }
+.pbadge { border-radius: 0; }
+
+/* 出てくるときの動き */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* 起動画面 */
+.boot {
+  position: fixed; inset: 0; z-index: 80;
+  background: #020308;
+  display: grid; place-items: center;
+  font-family: var(--mono); color: var(--neon);
+  transition: opacity 0.45s ease, visibility 0.45s;
+}
+.boot.done { opacity: 0; visibility: hidden; }
+.boot pre { margin: 0; font: inherit; font-size: 0.85rem; line-height: 1.7; text-shadow: 0 0 8px rgba(0, 240, 255, 0.7); white-space: pre-wrap; width: min(92vw, 420px); }
+.boot pre b { color: var(--pink); font-weight: 400; }
+.boot pre i { font-style: normal; color: var(--lime); }
+.boot .cursor { display: inline-block; width: 0.6em; height: 1em; background: var(--neon); vertical-align: -0.15em; animation: blink 0.7s steps(1) infinite; }
+
+/* トースト・合い鍵 */
+.toast { border-radius: 0; border-color: var(--neon); box-shadow: var(--glow); font-family: var(--mono); }
+.token-card { background: rgba(6, 10, 20, 0.95); border-color: var(--neon); }
+.token-card h2 { font-family: var(--display); color: var(--neon); }
+.token-card input { border-radius: 0; border-color: rgba(0, 240, 255, 0.4); }
+.token-card input:focus { outline: none; box-shadow: 0 0 12px rgba(0, 240, 255, 0.5); }
+
+@media (prefers-reduced-motion: reduce) {
+  #fx, .boot { display: none; }
+  .reveal { opacity: 1; transform: none; }
+}

@@ -3,78 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Claude 司令塔</title>
+<title>司令塔 | プロジェクトを前へ</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#04050a">
+<meta name="theme-color" content="#0b111b">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="claude.css?v=9">
+<link rel="stylesheet" href="claude.css?v=10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap">
-<link rel="stylesheet" href="cyber.css?v=9">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="cyber.css?v=10">
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><img src="icon.svg" alt=""><div>Claude 司令塔<small>TASKS · BUILDS · TWEETS</small></div></div>
+    <div class="brand"><img src="icon.svg" alt=""><div>司令塔<small>YOUR PROJECT WORKSPACE</small></div></div>
     <span class="spacer"></span>
     <span class="live" id="updated">読み込み中…</span>
-    <button class="pill-btn" type="button" onclick="location.reload()">↻ 更新</button>
+    <button class="pill-btn" type="button" onclick="location.reload()" aria-label="最新データに更新">↻ 更新</button>
   </header>
 
-  <section class="hero">
+  <nav class="section-nav" aria-label="画面内の移動"><a href="#overview" class="current" aria-current="location">ホーム</a><a href="#tasks-card">タスク</a><a href="#posts-card">投稿予定</a><a href="#tweets-card">投稿素材</a><a href="#history-card">作業履歴</a></nav>
+  <section class="hero" id="overview">
     <div class="eyebrow" id="hero-date">TODAY</div>
     <h1 id="hero-title">読み込み中…</h1>
     <p id="hero-sub"></p>
     <div class="hero-stats">
       <div class="hs coral"><b id="s-today">–</b><span>今日の作業</span></div>
-      <div class="hs cyan"><b id="s-created">–</b><span>今日つくったファイル</span></div>
-      <div class="hs amber"><b id="s-tweets">–</b><span>投稿待ちツイート</span></div>
-      <div class="hs violet"><b id="s-tasks">–</b><span>進行中・たこさん待ち</span></div>
+      <div class="hs cyan"><b id="s-created">–</b><span>新しいファイル</span></div>
+      <div class="hs amber"><b id="s-tweets">–</b><span>投稿待ち</span></div>
+      <div class="hs violet"><b id="s-tasks">–</b><span>未完了タスク</span></div>
     </div>
   </section>
 
+  <section class="focus-panel" aria-labelledby="focus-title"><div class="section-heading"><div><span class="eyebrow">NEXT ACTION</span><h2 id="focus-title">次の一歩に、集中。</h2></div><span class="count" id="focus-count"></span></div><div id="focus" class="focus-list"></div></section>
+  <div class="project-overview" id="project-overview" aria-label="プロジェクト概要"></div>
   <div class="mailbar" id="mailbar" hidden></div>
 
   <div class="filters" id="projects" role="group" aria-label="プロジェクト"></div>
 
   <div class="grid">
-    <section class="card span-2">
-      <h2>✅ タスク <span class="count" id="tasks-count"></span></h2>
+    <section class="card span-2" id="tasks-card">
+      <h2>タスク <span class="count" id="tasks-count"></span></h2>
+      <div class="task-controls"><label class="task-search"><span>⌕</span><input id="task-search" type="search" placeholder="タスクを検索" aria-label="タスクを検索"></label><select id="task-status" aria-label="タスクの状態"><option value="open">未完了</option><option value="waiting">自分の操作待ち</option><option value="active">進行中</option><option value="auto">自動</option><option value="idea">候補</option><option value="done">完了</option><option value="all">すべて</option></select></div>
       <div class="tasks" id="tasks"></div>
     </section>
 
     <section class="card span-2" id="posts-card">
-      <h2>📅 投稿予定 <span class="count" id="posts-count"></span></h2>
+      <h2>投稿スケジュール <span class="count" id="posts-count"></span></h2>
       <div class="posts" id="posts"></div>
     </section>
 
-    <section class="card span-2">
-      <h2>🐦 ツイート <span class="count" id="tweets-count"></span></h2>
+    <section class="card span-2" id="tweets-card">
+      <h2>投稿素材 <span class="count" id="tweets-count"></span></h2>
       <div class="tweets" id="tweets"></div>
     </section>
 
     <section class="card">
-      <h2>🔥 Activity <span class="count">直近12週</span></h2>
+      <h2>活動のリズム <span class="count">直近12週</span></h2>
       <div class="heat" id="heat"></div>
-      <div class="heat-legend"><span id="heat-from"></span><span>少 ▢▣■ 多</span><span>今日</span></div>
+      <div class="heat-legend"><span id="heat-from"></span><span>少 → 多</span><span>今日</span></div>
     </section>
 
     <section class="card">
-      <h2>🧩 プロジェクト別 <span class="count" id="streak"></span></h2>
+      <h2>プロジェクト別の作業 <span class="count" id="streak"></span></h2>
       <div class="bars" id="bars"></div>
     </section>
 
-    <section class="card span-2">
-      <h2>🗓 つくったもの <span class="count" id="tl-count"></span></h2>
+    <section class="card span-2" id="history-card">
+      <h2>作業履歴 <span class="count" id="tl-count"></span></h2>
       <div id="timeline"></div>
     </section>
   </div>
 
   <p class="foot"><span id="foot"></span><br><button class="linkish" type="button" onclick="HubLog.forget()">合い鍵をこのスマホから消す</button></p>
 </div>
+<a class="back-top" href="#overview" aria-label="ページ上部へ">↑</a>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="token-box" id="token-box" hidden>
@@ -88,8 +93,8 @@
   </form>
 </div>
 
-<script src="data.js?v=9"></script>
-<script src="app.js?v=9"></script>
-<script src="fx.js?v=9"></script>
+<script src="data.js?v=10"></script>
+<script src="app.js?v=10"></script>
+<script src="fx.js?v=10"></script>
 </body>
 </html>

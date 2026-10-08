@@ -4,10 +4,12 @@
   var esc = H.esc;
   var $ = function (id) { return document.getElementById(id); };
   var SEEN_KEY = "claude-hub-seen";
-  var STATUS = { active: "進行中", waiting: "たこさん待ち", auto: "自動", done: "完了", idea: "候補" };
+  var STATUS = { active: "進行中", waiting: "操作待ち", auto: "自動", done: "完了", idea: "候補" };
   var STATUS_ORDER = ["active", "waiting", "auto", "idea", "done"];
   var log = null;
   var project = "all";
+  var taskStatus = "open";
+  var taskQuery = "";
 
   function store(key, val) {
     try {
@@ -24,6 +26,7 @@
   }
 
   function countUp(el, to) {
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = to.toLocaleString(); return; }
     var start = performance.now();
     (function step(now) {
       var p = Math.min(1, (now - start) / 900);
@@ -74,12 +77,12 @@
     var created = d ? d.created.filter(inProject) : [];
     var latest = null;
     log.days.some(function (x) { latest = x.commits.filter(inProject)[0]; return latest; });
-    $("hero-date").textContent = "TODAY · " + today + " (" + weekdayJa(today) + ")";
+    $("hero-date").textContent = "WORKSPACE / " + today + " (" + weekdayJa(today) + ")";
     if (commits.length) {
-      $("hero-title").innerHTML = '今日は <span class="grad">' + commits.length + "件</span> つくりました";
+      $("hero-title").innerHTML = '今日は <span class="grad">' + commits.length + "件</span> 前へ。";
       $("hero-sub").textContent = "最新: " + commits[0].time + " [" + proj(commits[0].project).name + "] " + commits[0].title;
     } else {
-      $("hero-title").innerHTML = '今日はまだ <span class="grad">おやすみ中</span>';
+      $("hero-title").innerHTML = '今日も、<span class="grad">ひとつ先へ。</span>';
       $("hero-sub").textContent = latest ? "最後の作業: " + latest.date + " " + latest.time + " [" + proj(latest.project).name + "] " + latest.title : "";
     }
     countUp($("s-today"), commits.length);
@@ -88,26 +91,41 @@
     countUp($("s-tasks"), log.tasks.filter(function (t) { return (t.status === "active" || t.status === "waiting") && inProject(t); }).length);
   }
 
+  function matchesTask(t) {
+    var state = taskStatus === "all" || (taskStatus === "open" ? t.status === "active" || t.status === "waiting" : t.status === taskStatus);
+    return state && (!taskQuery || (t.title + " " + proj(t.project).name).toLowerCase().indexOf(taskQuery) >= 0);
+  }
+
   function renderTasks() {
-    var groups = (project === "all" ? log.projects : [proj(project)]).map(function (p) {
-      var list = log.tasks.filter(function (t) { return t.project === p.id; });
-      list.sort(function (a, b) { return STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status); });
-      return { p: p, list: list };
-    }).filter(function (g) { return g.list.length; });
-    var total = 0;
-    var done = 0;
-    $("tasks").innerHTML = groups.map(function (g) {
-      var gd = g.list.filter(function (t) { return t.status === "done" || t.status === "auto"; }).length;
-      total += g.list.length;
-      done += gd;
-      return '<div class="tgroup" style="--p:' + esc(g.p.color) + '"><h3>' + esc(g.p.name) + '<span class="prog">' + gd + "/" + g.list.length + "</span></h3>" +
-        '<div class="tbar"><i style="width:' + (gd / g.list.length * 100) + '%"></i></div><ul>' +
-        g.list.map(function (t) {
-          return '<li class="' + esc(t.status) + '"><span class="st st-' + esc(t.status) + '">' + (STATUS[t.status] || esc(t.status)) + '</span><span class="t">' + esc(t.title) +
-            (t.done ? ' <small class="muted mono">' + esc(t.done.slice(5)) + "</small>" : "") + "</span></li>";
-        }).join("") + "</ul></div>";
-    }).join("") || '<div class="empty">タスクはまだありません</div>';
-    $("tasks-count").textContent = done + " / " + total + " 完了・自動";
+    var all = log.tasks.filter(inProject);
+    var visible = all.filter(matchesTask);
+    $("tasks").innerHTML = (project === "all" ? log.projects : [proj(project)]).map(function (p) {
+      var list = visible.filter(function (t) { return t.project === p.id; });
+      if (!list.length) return "";
+      list.sort(function (a,b) { return STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status); });
+      return '<div class="tgroup" style="--p:' + esc(p.color) + '"><h3>' + esc(p.name) + '<span class="prog">' + list.length + ' 件</span></h3><ul>' + list.map(function (t) {
+        return '<li class="' + esc(t.status) + '"><span class="st st-' + esc(t.status) + '">' + (STATUS[t.status] || esc(t.status)) + '</span><span class="t">' + esc(t.title) + (t.done ? ' <small class="muted mono">' + esc(t.done.slice(5)) + '</small>' : '') + '</span></li>';
+      }).join('') + '</ul></div>';
+    }).join('') || '<div class="empty">' + (taskQuery ? '検索に一致するタスクはありません' : 'この状態のタスクはありません') + '</div>';
+    $("tasks-count").textContent = visible.length + " 件表示 / 全 " + all.length + " 件";
+  }
+
+  function renderOverview() {
+    var waiting = log.tasks.filter(function (t) { return inProject(t) && t.status === "waiting"; });
+    var active = log.tasks.filter(function (t) { return inProject(t) && t.status === "active"; });
+    var next = (log.posts || []).filter(function (p) { return inProject(p) && p.status === "scheduled" && !isPosted(p); }).sort(function (a,b) { return a.atUnix - b.atUnix; })[0];
+    var actions = waiting.concat(active).slice(0,3);
+    $("focus-count").textContent = waiting.length ? waiting.length + " 件の操作待ち" : active.length + " 件進行中";
+    $("focus").innerHTML = (next ? '<a class="focus-item scheduled-action" href="#post=' + encodeURIComponent(next.id) + '"><span class="focus-icon">↗</span><div><span class="focus-meta">次の投稿 · ' + esc(whenLabel(next.atUnix)) + '</span><strong>' + esc(next.title || next.id) + '</strong><small>' + esc(proj(next.project).name) + ' · ' + esc(countdown(next.atUnix)) + '</small></div><span class="focus-arrow">→</span></a>' : '') + actions.map(function (t,i) {
+      return '<button class="focus-item" data-focus-status="' + esc(t.status) + '" data-focus-project="' + esc(t.project) + '"><span class="focus-icon">' + String(i+1).padStart(2,"0") + '</span><div><span class="focus-meta">' + esc(proj(t.project).name) + ' · ' + STATUS[t.status] + '</span><strong>' + esc(t.title) + '</strong></div><span class="focus-arrow">→</span></button>';
+    }).join('') || '<div class="empty">今すぐ対応するタスクはありません。次のアイデアを育てましょう。</div>';
+    $("project-overview").innerHTML = log.projects.map(function (p) {
+      var tasks = log.tasks.filter(function (t) { return t.project === p.id; });
+      var done = tasks.filter(function (t) { return t.status === "done"; }).length;
+      var pending = tasks.filter(function (t) { return t.status === "active" || t.status === "waiting"; }).length;
+      var auto = tasks.filter(function (t) { return t.status === "auto"; }).length;
+      return '<article class="project-summary" style="--p:' + esc(p.color) + '"><div class="project-summary-top"><button data-project="' + esc(p.id) + '" aria-pressed="' + (project === p.id) + '"><i></i>' + esc(p.name) + '</button>' + (p.site ? '<a href="' + esc(p.site) + '" target="_blank" rel="noopener" aria-label="' + esc(p.name) + 'のサイトを開く">↗</a>' : '') + '</div><div class="project-numbers"><strong>' + pending + '</strong><span>未完了<span class="project-auto">自動 ' + auto + ' 件</span></span></div><div class="tbar"><i style="width:' + (tasks.length ? done/tasks.length*100 : 0) + '%"></i></div><small>完了 ' + done + ' / ' + tasks.length + ' 件</small></article>';
+    }).join('');
   }
 
   // ---------------------------------------------------------------- 投稿済みにする
@@ -358,6 +376,7 @@
   }
 
   function renderAll() {
+    renderOverview();
     renderMail();
     renderProjects();
     renderHero();
@@ -377,6 +396,21 @@
     project = b.dataset.p;
     store("claude-hub-project", project);
     renderAll();
+  };
+
+  $("task-search").oninput = function () { taskQuery = this.value.trim().toLowerCase(); if (log) renderTasks(); };
+  $("task-status").onchange = function () { taskStatus = this.value; if (log) renderTasks(); };
+  $("focus").onclick = function (e) {
+    var b = e.target.closest("[data-focus-status]");
+    if (!b) return;
+    project = b.dataset.focusProject; taskStatus = b.dataset.focusStatus; taskQuery = "";
+    $("task-search").value = ""; $("task-status").value = taskStatus;
+    store("claude-hub-project", project); renderAll(); $("tasks-card").scrollIntoView({behavior: "smooth", block: "start"});
+  };
+  $("project-overview").onclick = function (e) {
+    var b = e.target.closest("[data-project]"); if (!b) return;
+    project = project === b.dataset.project ? "all" : b.dataset.project;
+    store("claude-hub-project", project); renderAll();
   };
 
   H.load().then(function (data) {
@@ -400,6 +434,7 @@
     setTimeout(function () { if (latest) store(SEEN_KEY, latest); }, 4000);
   }).catch(function (e) {
     $("hero-title").textContent = "データを読み込めませんでした";
-    $("hero-sub").textContent = e.message + "（↻ 更新 でやり直し）";
+    $("hero-sub").textContent = e.message + "（↻ 更新でやり直せます）";
+    $("updated").textContent = "接続できませんでした";
   });
 })();

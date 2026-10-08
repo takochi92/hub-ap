@@ -9,11 +9,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="claude.css?v=12">
+<link rel="stylesheet" href="claude.css?v=13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="cyber.css?v=12">
+<link rel="stylesheet" href="cyber.css?v=13">
+<link rel="stylesheet" href="btc.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -24,7 +25,7 @@
     <button class="pill-btn" type="button" onclick="location.reload()" aria-label="最新データに更新">↻ 更新</button>
   </header>
 
-  <nav class="section-nav" aria-label="画面内の移動"><a href="#overview" class="current" aria-current="location">ホーム</a><a href="#tasks-card">タスク</a><a href="#posts-card">投稿予定</a><a href="#tweets-card">投稿素材</a><a href="#history-card">作業履歴</a></nav>
+  <nav class="section-nav" aria-label="画面内の移動"><a href="#overview" class="current" aria-current="location">ホーム</a><a href="#tasks-card">タスク</a><a href="#posts-card">投稿予定</a><a href="#tweets-card">投稿素材</a><a href="#btc-card">BTC</a><a href="#history-card">作業履歴</a></nav>
   <section class="hero" id="overview">
     <div class="hero-signal" aria-hidden="true"><span class="signal-point"></span><span class="signal-point"></span><img src="icon.svg" alt=""></div>
     <div class="eyebrow" id="hero-date">TODAY</div>
@@ -48,6 +49,7 @@
       <div class="studio-outputs" id="studio-outputs"></div>
     </div></div>
   </section>
+  <section id="btc-card" aria-label="BTC分析"><h2>ビットコイン司令室</h2><p>データを確認しています…</p></section>
   <section class="focus-panel" aria-labelledby="focus-title"><div class="section-heading"><div><span class="eyebrow">NEXT / 次に取り組むこと</span><h2 id="focus-title">次の一歩に、集中。</h2></div><span class="count" id="focus-count"></span></div><div id="focus" class="focus-list"></div></section>
   <div class="mailbar" id="mailbar" hidden></div>
 
@@ -103,8 +105,9 @@
   </form>
 </div>
 
-<script src="data.js?v=12"></script>
-<script src="app.js?v=12"></script>
-<script src="fx.js?v=12"></script>
+<script src="data.js?v=13"></script>
+<script src="app.js?v=13"></script>
+<script src="fx.js?v=13"></script>
+<script src="btc.js?v=13"></script>
 </body>
 </html>

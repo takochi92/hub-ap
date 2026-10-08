@@ -28,10 +28,10 @@
   }
 
   // 20秒で返事がなければあきらめてエラーを出す
-  function get(file) {
+  function get(file, ref) {
     var ctrl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
-    return fetch(API + file + "?ref=data&t=" + Date.now(), {
+    return fetch(API + file + "?ref=" + (ref || "data") + "&t=" + Date.now(), {
       signal: ctrl ? ctrl.signal : undefined,
       headers: { Accept: "application/vnd.github.raw+json", Authorization: "Bearer " + getToken() }
     }).catch(function (e) {
@@ -132,6 +132,7 @@
   }
 
   window.HubLog = {
+    loadBTC: function () { if (!getToken()) return Promise.reject(new Error("先に司令塔の合い鍵を設定してください")); return get("btc.json", "btc-data"); },
     markPosted: markPosted,
     todayJst: todayJst,
     load: loadWithToken,
@@ -159,3 +160,4 @@
     }
   };
 })();
+

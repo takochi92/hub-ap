@@ -294,3 +294,8 @@ a { color: inherit; }
 /* 投稿済み */
 .done-btn { border-color: var(--lime); color: var(--lime); }
 .posted-toggle { display: block; margin: 12px auto 0; }
+
+/* メール */
+.mailbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+.mailbar[hidden] { display: none; }
+.mail-btn { flex: 1 1 140px; justify-content: center; border-color: var(--p); color: var(--p); }

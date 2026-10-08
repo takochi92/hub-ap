@@ -349,7 +349,16 @@
     $("tl-count").textContent = log.totals.commits + " commits · " + log.totals.days + " days";
   }
 
+  function renderMail() {
+    var list = log.mail || [];
+    $("mailbar").hidden = !list.length;
+    $("mailbar").innerHTML = list.map(function (m) {
+      return '<a class="pill-btn mail-btn" style="--p:' + esc(m.color || "#00f0ff") + '" href="' + esc(m.url) + '" target="_blank" rel="noopener">📩 ' + esc(m.name) + " メール</a>";
+    }).join("");
+  }
+
   function renderAll() {
+    renderMail();
     renderProjects();
     renderHero();
     renderTasks();

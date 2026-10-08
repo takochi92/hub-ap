@@ -193,3 +193,13 @@ body::after {
   #fx, .boot { display: none; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* 予約投稿（サイバー） */
+.post { border-radius: 0; background: rgba(4, 8, 16, 0.75); clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
+.post.next { border-color: var(--amber); box-shadow: inset 0 0 26px -12px var(--amber); }
+.post.next .post-cd { text-shadow: 0 0 8px var(--amber); animation: blink 1.4s steps(1) infinite; }
+.post.focus { outline-color: var(--pink); box-shadow: 0 0 22px -4px var(--pink); }
+.post-when { font-family: var(--display); letter-spacing: 0.04em; text-shadow: 0 0 8px rgba(245, 255, 59, 0.5); }
+.post-imgs img { border-radius: 0; border-color: rgba(0, 240, 255, 0.35); }
+.post-imgs b { border-radius: 0; background: var(--pink); }
+.pbadge.plat { color: var(--pink); border-color: rgba(255, 43, 214, 0.6); }

@@ -131,6 +131,117 @@
     $("tweets-count").textContent = list.filter(function (t) { return t.status === "ready"; }).length + " 件 投稿待ち";
   }
 
+  // ---------------------------------------------------------------- 予約投稿
+
+  var PLAT = { instagram: ["📸", "Instagram", "https://www.instagram.com/"], x: ["🐦", "X", "https://x.com/"] };
+
+  function countdown(unix) {
+    var s = unix - Date.now() / 1000;
+    if (s < -3600) return "時間を過ぎています";
+    if (s <= 0) return "▶ 投稿時間です！";
+    var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+    return "あと " + (d ? d + "日 " : "") + (d || h ? h + "時間 " : "") + m + "分";
+  }
+
+  function whenLabel(unix) {
+    var d = new Date(unix * 1000 + 9 * 3600 * 1000);
+    return (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + "(" + "日月火水木金土".charAt(d.getUTCDay()) + ") " + d.toISOString().slice(11, 16);
+  }
+
+  function fetchFiles(post) {
+    if (post._files) return Promise.resolve(post._files);
+    return Promise.all(post.images.map(function (url, i) {
+      return fetch(url).then(function (r) { return r.blob(); }).then(function (b) {
+        return new File([b], post.id + "-" + String(i + 1).padStart(2, "0") + ".jpg", { type: b.type || "image/jpeg" });
+      });
+    })).then(function (files) { post._files = files; return files; });
+  }
+
+  function saveFiles(files) {
+    files.forEach(function (f, i) {
+      setTimeout(function () {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(f);
+        a.download = f.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }, i * 350);
+    });
+  }
+
+  function renderPosts() {
+    var list = (log.posts || []).filter(inProject);
+    var upcoming = list.filter(function (p) { return p.status === "scheduled"; });
+    var done = list.filter(function (p) { return p.status !== "scheduled"; });
+    var next = upcoming.find(function (p) { return p.atUnix > Date.now() / 1000 - 3600; });
+    $("posts").innerHTML = upcoming.concat(done).map(function (p, i) {
+      var pl = PLAT[p.platform] || PLAT.instagram;
+      return '<article class="post ' + esc(p.status) + (p === next ? " next" : "") + '" id="post-' + esc(p.id) + '" data-i="' + i + '">' +
+        '<div class="post-top"><span class="post-when mono">' + esc(whenLabel(p.atUnix)) + "</span>" + badge(p.project) +
+        '<span class="pbadge plat">' + pl[0] + " " + pl[1] + "</span>" +
+        '<span class="post-cd mono" data-at="' + p.atUnix + '">' + (p.status === "scheduled" ? countdown(p.atUnix) : "投稿済み " + esc(p.posted || "")) + "</span></div>" +
+        '<h3 class="post-title">' + esc(p.title || p.id) + "</h3>" +
+        '<div class="post-imgs">' + p.images.map(function (u, j) {
+          return '<a href="' + esc(u) + '" target="_blank" rel="noopener"><img loading="lazy" src="' + esc(u) + '" alt="' + (j + 1) + '枚目"><b>' + (j + 1) + "</b></a>";
+        }).join("") + "</div>" +
+        '<details class="post-text"><summary>キャプション（' + p.text.length + '文字）</summary><p>' + esc(p.text) + "</p></details>" +
+        '<div class="post-btns">' +
+        '<button class="pill-btn" type="button" data-act="copy">📋 キャプションをコピー</button>' +
+        '<button class="pill-btn x" type="button" data-act="share">📤 ' + pl[1] + 'に送る</button>' +
+        '<button class="pill-btn" type="button" data-act="save">💾 画像を保存</button>' +
+        "</div></article>";
+    }).join("") || '<div class="empty">予約投稿はまだありません。Claude に「◯日の◯時に投稿」と頼むと posts/ に入ります</div>';
+    var all = upcoming.concat(done);
+    $("posts").onclick = function (e) {
+      var b = e.target.closest("[data-act]");
+      if (!b) return;
+      var p = all[Number(b.closest(".post").dataset.i)];
+      var act = b.dataset.act;
+      if (act === "copy") return copy(p.text);
+      b.disabled = true;
+      var label = b.textContent;
+      b.textContent = "画像を準備中…";
+      // 先にキャプションをコピーしておく（インスタは共有で文章を受け取らないので、貼り付けて使う）
+      if (act === "share") copy(p.text);
+      fetchFiles(p).then(function (files) {
+        if (act === "share" && navigator.canShare && navigator.canShare({ files: files })) {
+          toast("キャプションをコピーしました。次の画面で Instagram を選んでください");
+          return navigator.share({ files: files, title: p.title }).catch(function (err) {
+            if (err && err.name === "NotAllowedError") toast("画像の準備ができました。もう一度「送る」を押してください");
+          });
+        }
+        saveFiles(files);
+        toast(act === "share" ? "この端末は直接送れないので画像を保存しました。キャプションはコピー済みです" : "画像を " + files.length + " 枚保存します");
+      }).catch(function () {
+        toast("画像を読み込めませんでした");
+      }).then(function () {
+        b.disabled = false;
+        b.textContent = label;
+      });
+    };
+    $("posts-count").textContent = upcoming.length + " 件 予定" + (next ? " · 次 " + whenLabel(next.atUnix) : "");
+    $("posts-card").hidden = !list.length && project !== "all";
+  }
+
+  // 通知から開いたとき（#post=…）はその投稿へ
+  function focusPost() {
+    var m = location.hash.match(/post=([^&]+)/);
+    if (!m) return;
+    var el = document.getElementById("post-" + decodeURIComponent(m[1]));
+    if (!el) return;
+    el.classList.add("focus");
+    var d = el.querySelector("details");
+    if (d) d.open = true;
+    setTimeout(function () { el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 400);
+  }
+
+  setInterval(function () {
+    document.querySelectorAll(".post-cd[data-at]").forEach(function (el) {
+      if (el.closest(".post.scheduled")) el.textContent = countdown(Number(el.dataset.at));
+    });
+  }, 30000);
+
   function renderHeat() {
     var days = H.series(log, 84, project === "all" ? null : project);
     var html = "";
@@ -197,6 +308,7 @@
     renderProjects();
     renderHero();
     renderTasks();
+    renderPosts();
     renderTweets();
     renderHeat();
     renderBars();
@@ -218,6 +330,8 @@
     var saved = store("claude-hub-project");
     if (saved && (saved === "all" || log.projects.some(function (p) { return p.id === saved; }))) project = saved;
     renderAll();
+    focusPost();
+    window.addEventListener("hashchange", focusPost);
     $("updated").textContent = "更新 " + new Date(log.generatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
     $("foot").textContent = log.hub + " · " + log.projects.map(function (p) { return p.name; }).join(" / ");
 

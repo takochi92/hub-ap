@@ -10,8 +10,13 @@
   function todayJst() {
     return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
   }
+  // 貼り付けた文字から合い鍵の部分だけを取り出す（前後の空白・日本語・見えない文字を除く）
+  function clean(t) {
+    var m = String(t || "").match(/github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]+/);
+    return m ? m[0] : "";
+  }
   function getToken() {
-    try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
+    try { return clean(localStorage.getItem(KEY)); } catch (e) { return ""; }
   }
   function setToken(t) {
     try { t ? localStorage.setItem(KEY, t) : localStorage.removeItem(KEY); } catch (e) {}
@@ -51,8 +56,11 @@
       box.hidden = false;
       document.getElementById("token-form").onsubmit = function (e) {
         e.preventDefault();
-        var v = document.getElementById("token-input").value.trim();
-        if (!v) return;
+        var v = clean(document.getElementById("token-input").value);
+        if (!v) {
+          document.getElementById("token-msg").textContent = "github_pat_ で始まる合い鍵が見つかりませんでした。もう一度コピーして貼り付けてください";
+          return;
+        }
         setToken(v);
         document.getElementById("token-input").value = "";
         box.hidden = true;

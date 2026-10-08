@@ -17,11 +17,22 @@
     try { t ? localStorage.setItem(KEY, t) : localStorage.removeItem(KEY); } catch (e) {}
   }
 
+  function status(msg) {
+    var el = document.getElementById("hero-sub");
+    if (el) el.textContent = msg;
+  }
+
+  // 20秒で返事がなければあきらめてエラーを出す
   function get(file) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
     return fetch(API + file + "?ref=data&t=" + Date.now(), {
-      cache: "no-store",
+      signal: ctrl ? ctrl.signal : undefined,
       headers: { Accept: "application/vnd.github.raw+json", Authorization: "Bearer " + getToken() }
+    }).catch(function (e) {
+      throw new Error("GitHub につながりませんでした（" + (e.name === "AbortError" ? "20秒たっても返事なし" : e.message) + "）。電波や広告ブロックを確かめてください");
     }).then(function (r) {
+      clearTimeout(timer);
       if (r.status === 401 || r.status === 403 || r.status === 404) {
         var e = new Error("合い鍵が使えませんでした（期限切れ・まちがい・権限なし）");
         e.auth = true;
@@ -53,6 +64,7 @@
   function loadWithToken() {
     var ready = getToken() ? Promise.resolve() : askToken();
     return ready.then(function () {
+      status("claude-hub からデータを読み込み中…");
       return Promise.all([get("log.json"), get("images.json").catch(function () { return {}; })]);
     }).then(function (res) {
       images = res[1] || {};

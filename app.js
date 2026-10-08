@@ -232,6 +232,6 @@
     setTimeout(function () { if (latest) store(SEEN_KEY, latest); }, 4000);
   }).catch(function (e) {
     $("hero-title").textContent = "データを読み込めませんでした";
-    $("hero-sub").textContent = e.message;
+    $("hero-sub").textContent = e.message + "（↻ 更新 でやり直し）";
   });
 })();

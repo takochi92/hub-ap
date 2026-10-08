@@ -376,15 +376,30 @@
   }
 
 
+
   function studioAvatar(index) {
-    var colors = ["#a7ea77","#58b5ff","#fa5bb9"];
-    var c = colors[index % colors.length];
-    var shape = index % 3 === 0
-      ? '<path d="M24 34Q19 11 33 17Q40 12 46 22Q53 12 64 17Q78 13 73 35Q88 60 73 75Q48 87 24 75Q8 60 24 34Z" fill="' + c + '"/>'
+    var palettes = [
+      ["#a7ea77","#e4ffbe","#398333"],
+      ["#58b5ff","#c0e6ff","#145da4"],
+      ["#fa5bb9","#ffc5e9","#9f1b64"]
+    ];
+    var p = palettes[index % palettes.length], id = "crew-" + index;
+    var d = index % 3 === 0
+      ? "M24 34Q19 11 33 17Q40 12 46 22Q53 12 64 17Q78 13 73 35Q88 60 73 75Q48 87 24 75Q8 60 24 34Z"
       : index % 3 === 1
-      ? '<path d="M19 36Q15 18 32 20L65 16Q84 16 78 36L83 61Q83 80 65 81L30 82Q12 81 15 62Z" fill="' + c + '"/><path d="M23 21Q41 9 70 16" fill="none" stroke="#223241" stroke-width="8" stroke-linecap="round"/>'
-      : '<path d="M23 32L25 19 38 29Q48 25 59 29L73 19 75 35Q88 63 73 77Q49 87 24 76Q10 63 23 32Z" fill="' + c + '"/>';
-    return '<svg class="studio-avatar" viewBox="0 0 96 96" aria-hidden="true"><ellipse cx="48" cy="86" rx="27" ry="4" fill="' + c + '" opacity=".12"/>' + shape + '<ellipse cx="36" cy="49" rx="7" ry="9" fill="#0b0c12"/><ellipse cx="61" cy="49" rx="7" ry="9" fill="#0b0c12"/><circle cx="38" cy="46" r="2" fill="#fff" opacity=".8"/><circle cx="63" cy="46" r="2" fill="#fff" opacity=".8"/><path d="M41 66Q48 72 55 66" fill="none" stroke="#0b0c12" stroke-width="2.5" stroke-linecap="round"/></svg>';
+      ? "M19 36Q15 18 32 20L65 16Q84 16 78 36L83 61Q83 80 65 81L30 82Q12 81 15 62Z"
+      : "M23 32L25 19 38 29Q48 25 59 29L73 19 75 35Q88 63 73 77Q49 87 24 76Q10 63 23 32Z";
+    return '<svg class="studio-avatar" viewBox="0 0 96 96" aria-hidden="true" style="--crew-delay:' + (-index * 1.1) + 's">' +
+      '<defs><radialGradient id="' + id + '-body" cx="30%" cy="22%" r="82%"><stop stop-color="' + p[1] + '"/><stop offset=".4" stop-color="' + p[0] + '"/><stop offset="1" stop-color="' + p[2] + '"/></radialGradient>' +
+      '<radialGradient id="' + id + '-shine"><stop stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="' + id + '-shadow"><stop stop-color="#000" stop-opacity=".6"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>' +
+      '<clipPath id="' + id + '-clip"><path d="' + d + '"/></clipPath></defs>' +
+      '<ellipse class="avatar-shadow" cx="48" cy="86" rx="28" ry="6" fill="url(#' + id + '-shadow)"/>' +
+      '<g class="avatar-body"><path d="' + d + '" fill="url(#' + id + '-body)" stroke="' + p[0] + '" stroke-opacity=".45" stroke-width=".8"/>' +
+      '<g clip-path="url(#' + id + '-clip)"><ellipse cx="33" cy="30" rx="24" ry="14" fill="url(#' + id + '-shine)" transform="rotate(-25 33 30)"/><ellipse cx="73" cy="63" rx="20" ry="24" fill="' + p[2] + '" opacity=".18"/></g>' +
+      (index % 3 === 1 ? '<path d="M23 21Q41 9 70 16" fill="none" stroke="#273d50" stroke-width="9" stroke-linecap="round"/><path d="M25 19Q42 11 66 15" fill="none" stroke="#7a98b3" stroke-opacity=".65" stroke-width="2" stroke-linecap="round"/>' : '') +
+      '<g class="avatar-eyes"><ellipse cx="36" cy="49" rx="7" ry="9" fill="#101720"/><ellipse cx="61" cy="49" rx="7" ry="9" fill="#101720"/><circle cx="38" cy="46" r="2.5" fill="#fff" opacity=".93"/><circle cx="63" cy="46" r="2.5" fill="#fff" opacity=".93"/><circle cx="34" cy="53" r="1" fill="#fff" opacity=".3"/><circle cx="59" cy="53" r="1" fill="#fff" opacity=".3"/></g>' +
+      '<ellipse cx="26" cy="61" rx="5" ry="2.5" fill="' + p[1] + '" opacity=".35"/><ellipse cx="72" cy="61" rx="5" ry="2.5" fill="' + p[1] + '" opacity=".25"/><path d="M41 66Q48 72 55 66" fill="none" stroke="#152015" stroke-width="2.5" stroke-linecap="round"/></g></svg>';
   }
 
   function renderStudio() {

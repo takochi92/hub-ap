@@ -14,7 +14,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="cyber.css?v=13">
-<link rel="stylesheet" href="btc.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -25,7 +24,7 @@
     <button class="pill-btn" type="button" onclick="location.reload()" aria-label="最新データに更新">↻ 更新</button>
   </header>
 
-  <nav class="section-nav" aria-label="画面内の移動"><a href="#overview" class="current" aria-current="location">ホーム</a><a href="#tasks-card">タスク</a><a href="#posts-card">投稿予定</a><a href="#tweets-card">投稿素材</a><a href="#btc-card">BTC</a><a href="#history-card">作業履歴</a></nav>
+  <nav class="section-nav" aria-label="画面内の移動"><a href="#overview" class="current" aria-current="location">ホーム</a><a href="#tasks-card">タスク</a><a href="#posts-card">投稿予定</a><a href="#tweets-card">投稿素材</a><a href="#history-card">作業履歴</a></nav>
   <section class="hero" id="overview">
     <div class="hero-signal" aria-hidden="true"><span class="signal-point"></span><span class="signal-point"></span><img src="icon.svg" alt=""></div>
     <div class="eyebrow" id="hero-date">TODAY</div>
@@ -43,13 +42,12 @@
   <section class="studio" aria-labelledby="studio-title">
     <div class="studio-heading"><div><span class="eyebrow">PROJECT / CONTROL ROOM</span><h2 id="studio-title">ひとつの司令塔。<br>すべてを、前へ。</h2></div><span class="studio-caption">タスク・作業・投稿のつながり</span></div>
     <div class="studio-scroll"><div class="studio-network">
-      <svg class="studio-wires" viewBox="0 0 1000 540" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke-width="1.5"><path class="wire mint" d="M190 85C310 85 280 85 410 85M190 250C295 250 300 85 410 85M190 425C310 425 280 85 410 85M610 85C740 85 715 80 810 80M610 85C730 85 710 260 810 260"/><path class="wire blue" d="M190 85C315 85 290 265 410 265M190 250C310 250 280 265 410 265M190 425C320 425 290 265 410 265M610 265C735 265 710 80 810 80M610 265C730 265 710 260 810 260"/><path class="wire pink" d="M190 85C315 85 290 445 410 445M190 250C315 250 285 445 410 445M190 425C310 425 280 445 410 445M610 445C735 445 710 260 810 260M610 445C730 445 710 440 810 440"/></g></svg>
+      <svg class="studio-wires" viewBox="0 0 1000 540" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke-width="1.5"><path class="wire mint" d="M190 85C310 85 280 85 410 85M190 250C295 250 300 85 410 85M190 425C310 425 280 85 410 85M610 85C740 85 715 80 810 80M610 85C730 85 710 260 810 260"/><path class="wire blue" d="M190 85C315 85 290 265 410 265M190 250C310 250 280 265 410 265M190 425C320 425 290 265 410 265M610 265C735 265 710 80 810 80M610 265C730 265 710 260 810 260"/><path class="wire pink" d="M190 85C315 85 290 445 410 445M190 250C315 250 285 445 410 445M190 425C310 425 280 445 410 445M610 445C735 445 710 260 810 260M610 445C730 445 710 440 810 440"/></g><g fill="none"><path class="wire-pulse mint" d="M190 85C310 85 280 85 410 85M190 250C295 250 300 85 410 85M190 425C310 425 280 85 410 85M610 85C740 85 715 80 810 80M610 85C730 85 710 260 810 260"/><path class="wire-pulse blue" d="M190 85C315 85 290 265 410 265M190 250C310 250 280 265 410 265M190 425C320 425 290 265 410 265M610 265C735 265 710 80 810 80M610 265C730 265 710 260 810 260"/><path class="wire-pulse pink" d="M190 85C315 85 290 445 410 445M190 250C315 250 285 445 410 445M190 425C310 425 280 445 410 445M610 445C735 445 710 260 810 260M610 445C730 445 710 440 810 440"/></g></svg>
       <div class="studio-sources" id="studio-sources"></div>
       <div class="project-overview" id="project-overview" aria-label="プロジェクトの担当パネル"></div>
       <div class="studio-outputs" id="studio-outputs"></div>
     </div></div>
   </section>
-  <section id="btc-card" aria-label="BTC分析"><h2>ビットコイン司令室</h2><p>データを確認しています…</p></section>
   <section class="focus-panel" aria-labelledby="focus-title"><div class="section-heading"><div><span class="eyebrow">NEXT / 次に取り組むこと</span><h2 id="focus-title">次の一歩に、集中。</h2></div><span class="count" id="focus-count"></span></div><div id="focus" class="focus-list"></div></section>
   <div class="mailbar" id="mailbar" hidden></div>
 
@@ -108,6 +106,5 @@
 <script src="data.js?v=13"></script>
 <script src="app.js?v=13"></script>
 <script src="fx.js?v=13"></script>
-<script src="btc.js?v=13"></script>
 </body>
 </html>

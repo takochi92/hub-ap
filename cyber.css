@@ -58,3 +58,22 @@ body::after{display:block;content:"";position:fixed;inset:0;width:auto;height:au
 @media(max-width:760px){.wrap{padding:0 15px 110px}.hero h1{font-size:24px}.hero-stats{margin-top:18px}.hs{padding:15px 17px}.hs b{font-size:25px}.studio{margin-top:22px;padding-top:22px}.studio-heading{display:block;margin-bottom:14px}.studio-heading h2{font-size:27px}.studio-caption{display:block;margin-top:12px;font-size:9px}.studio-caption::after{content:" · 横にスワイプして全体を見る";color:#8cdeaa}.studio-network{min-width:740px;min-height:500px}.network-panel{padding:14px 12px}.studio .project-summary{padding:12px}.studio .project-summary-top button{font-size:11px}.studio .project-summary small{font-size:9px}.studio .project-summary-top i{width:4px;height:4px}.studio .project-numbers strong{font-size:24px}.studio-avatar{width:57px;height:57px;margin-right:10px}.studio-heading .eyebrow{font-size:8px}.section-nav{background:#090c10f5}.section-nav a{font:10px var(--sans)}.section-nav a.current{color:#a7ea77;background:#a7ea7710}.focus-panel{padding:17px}.focus-item{padding:13px}.card{padding:17px}.card h2{font-size:14px}.tgroup li{font-size:12px;line-height:1.9}.project-overview{gap:12px}.hero-signal{width:74px;height:74px}.hero>h1,.hero>.eyebrow{padding-right:76px}.tweet-text{font-size:12px}.post-btns .pill-btn{font-size:10px}}
 @media(max-width:360px){.hero>h1,.hero>.eyebrow{padding-right:0}}
 .studio .project-summary:nth-child(1){--p:#a7ea77!important}.studio .project-summary:nth-child(2){--p:#58b5ff!important}.studio .project-summary:nth-child(3){--p:#fa5bb9!important}
+
+/* Light travels along the routes; the companions breathe and blink. */
+.studio-wires{opacity:.9}
+.studio-wires .wire{stroke-width:1.2;animation:route-glow 4.2s ease-in-out infinite}
+.studio-wires .wire.blue{animation-delay:-1.4s}.studio-wires .wire.pink{animation-delay:-2.8s}
+.studio-wires .wire-pulse{stroke-width:2.4;stroke-linecap:round;stroke-dasharray:6 190;animation:route-travel 4.8s linear infinite;opacity:.95}
+.studio-wires .wire-pulse.mint{stroke:#d6ffe8;filter:drop-shadow(0 0 3px #8cdeaa)}
+.studio-wires .wire-pulse.blue{stroke:#c7ebff;filter:drop-shadow(0 0 3px #58b5ff);animation-duration:5.4s;animation-delay:-1.8s}
+.studio-wires .wire-pulse.pink{stroke:#ffd2ed;filter:drop-shadow(0 0 3px #fa5bb9);animation-duration:6s;animation-delay:-3.3s}
+@keyframes route-travel{to{stroke-dashoffset:-392}}
+@keyframes route-glow{0%,100%{opacity:.48}50%{opacity:.95}}
+.studio-avatar{overflow:visible;filter:drop-shadow(0 4px 5px #0005)}
+.avatar-body{transform-box:view-box;transform-origin:48px 76px;animation:crew-float 4.6s ease-in-out infinite;animation-delay:var(--crew-delay)}
+.avatar-shadow{transform-box:fill-box;transform-origin:center;animation:crew-shadow 4.6s ease-in-out infinite;animation-delay:var(--crew-delay)}
+.avatar-eyes{transform-box:fill-box;transform-origin:center;animation:crew-blink 6.7s linear infinite;animation-delay:var(--crew-delay)}
+@keyframes crew-float{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-3px) rotate(1.5deg)}}
+@keyframes crew-shadow{0%,100%{transform:scaleX(1);opacity:.7}50%{transform:scaleX(.83);opacity:.45}}
+@keyframes crew-blink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.08)}}
+@media(prefers-reduced-motion:reduce){.studio-wires .wire,.wire-pulse,.avatar-body,.avatar-eyes,.avatar-shadow{animation:none!important}.studio-wires .wire-pulse{opacity:0}.avatar-body,.avatar-eyes,.avatar-shadow{transform:none}}

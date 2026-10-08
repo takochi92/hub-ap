@@ -88,7 +88,51 @@
     });
   }
 
+  // ---------------------------------------------------------------- 投稿済みにする（claude-hub のファイルを書き換える）
+  function b64decode(b) {
+    var bin = atob(String(b).replace(/\s/g, ""));
+    return new TextDecoder().decode(Uint8Array.from(bin, function (c) { return c.charCodeAt(0); }));
+  }
+  function b64encode(text) {
+    var bytes = new TextEncoder().encode(text);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function apiErr(r, step) {
+    var e = new Error(step + " " + r.status);
+    // 合い鍵が「見るだけ」だと書き込みで 403/404 になる
+    if (step === "書き込み" && (r.status === 403 || r.status === 404)) e.readonly = true;
+    return e;
+  }
+
+  function markPosted(file) {
+    var url = API + file.split("/").map(encodeURIComponent).join("/");
+    var headers = { Accept: "application/vnd.github+json", Authorization: "Bearer " + getToken() };
+    return fetch(url + "?ref=main&t=" + Date.now(), { headers: headers }).then(function (r) {
+      if (!r.ok) throw apiErr(r, "読み込み");
+      return r.json();
+    }).then(function (j) {
+      var text = b64decode(j.content);
+      var fm = text.match(/^---\n([\s\S]*?)\n---/);
+      if (!fm) throw new Error("ファイルの形が違います");
+      var head = fm[1];
+      var today = todayJst();
+      head = /^status:/m.test(head) ? head.replace(/^status:.*$/m, "status: posted") : head + "\nstatus: posted";
+      head = /^posted:/m.test(head) ? head.replace(/^posted:.*$/m, "posted: " + today) : head + "\nposted: " + today;
+      var out = text.replace(fm[0], "---\n" + head + "\n---");
+      return fetch(url, {
+        method: "PUT",
+        headers: Object.assign({ "Content-Type": "application/json" }, headers),
+        body: JSON.stringify({ message: "投稿済み: " + file, content: b64encode(out), sha: j.sha, branch: "main" })
+      });
+    }).then(function (r) {
+      if (!r.ok) throw apiErr(r, "書き込み");
+    });
+  }
+
   window.HubLog = {
+    markPosted: markPosted,
     todayJst: todayJst,
     load: loadWithToken,
     image: function (p) { return images[p] || ""; },

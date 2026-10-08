@@ -290,3 +290,7 @@ a { color: inherit; }
 .post-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .post-btns .pill-btn { flex: 1 1 auto; justify-content: center; }
 .post-btns .pill-btn:disabled { opacity: 0.6; }
+
+/* 投稿済み */
+.done-btn { border-color: var(--lime); color: var(--lime); }
+.posted-toggle { display: block; margin: 12px auto 0; }

@@ -84,7 +84,7 @@
     }
     countUp($("s-today"), commits.length);
     countUp($("s-created"), created.length);
-    countUp($("s-tweets"), log.tweets.filter(function (t) { return t.status === "ready" && inProject(t); }).length);
+    countUp($("s-tweets"), log.tweets.filter(function (t) { return t.status === "ready" && !isPosted(t) && inProject(t); }).length);
     countUp($("s-tasks"), log.tasks.filter(function (t) { return (t.status === "active" || t.status === "waiting") && inProject(t); }).length);
   }
 
@@ -110,25 +110,65 @@
     $("tasks-count").textContent = done + " / " + total + " 完了・自動";
   }
 
+  // ---------------------------------------------------------------- 投稿済みにする
+
+  var HIDE_KEY = "hub-posted";
+  var showPosted = false;
+  function hiddenIds() {
+    try { return JSON.parse(localStorage.getItem(HIDE_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function hideLocal(id) {
+    var a = hiddenIds();
+    if (a.indexOf(id) < 0) a.push(id);
+    try { localStorage.setItem(HIDE_KEY, JSON.stringify(a.slice(-300))); } catch (e) {}
+  }
+  function isPosted(x) { return x.status === "posted" || hiddenIds().indexOf(x.id) >= 0; }
+
+  function markPosted(item) {
+    var name = item.title || item.text.split("\n")[0];
+    if (!confirm("「" + name.slice(0, 40) + "」を投稿済みにして、一覧から消しますか？")) return;
+    hideLocal(item.id);
+    renderAll();
+    var job = H.markPosted ? H.markPosted(item.file) : Promise.reject({ readonly: true });
+    job.then(function () {
+      toast("✅ 投稿済みにしました");
+    }).catch(function (e) {
+      toast(e && e.readonly
+        ? "この端末の一覧から消しました（司令塔に記録するには、合い鍵を「書き込みも可」にしてください）"
+        : "司令塔への記録に失敗しました（" + (e && e.message) + "）。この端末の一覧からは消しました");
+    });
+  }
+
+  function postedToggle(n) {
+    return n ? '<button class="linkish posted-toggle" type="button" data-toggle="1">' + (showPosted ? "投稿済みを隠す" : "投稿済み " + n + " 件を表示") + "</button>" : "";
+  }
+
   function renderTweets() {
-    var list = log.tweets.filter(inProject);
+    var all = log.tweets.filter(inProject);
+    var postedN = all.filter(isPosted).length;
+    var list = all.filter(function (t) { return showPosted || !isPosted(t); });
     list.sort(function (a, b) { return (a.status === "ready" ? 0 : 1) - (b.status === "ready" ? 0 : 1) || (a.id < b.id ? 1 : -1); });
     $("tweets").innerHTML = list.map(function (t, i) {
       var over = t.length > 280;
       return '<article class="tweet ' + esc(t.status) + '">' +
         '<div class="tweet-top">' + badge(t.project) + '<span class="mono muted">' + esc(t.date) + "</span>" +
-        '<span class="st st-' + (t.status === "ready" ? "active" : "done") + '">' + (t.status === "ready" ? "投稿待ち" : t.status === "posted" ? "投稿済み" : "下書き") + "</span></div>" +
+        '<span class="st st-' + (isPosted(t) ? "done" : t.status === "ready" ? "active" : "idea") + '">' + (isPosted(t) ? "投稿済み" : t.status === "ready" ? "投稿待ち" : "下書き") + "</span></div>" +
         (t.image ? '<img class="tweet-img" loading="lazy" src="' + esc(H.image(t.image)) + '" alt="">' : "") +
         '<p class="tweet-text">' + esc(t.text) + "</p>" +
         '<div class="tweet-foot"><span class="mono ' + (over ? "del" : "muted") + '">' + t.length + "/280</span>" +
         '<button class="pill-btn" type="button" data-copy="' + i + '">コピー</button>' +
-        '<a class="pill-btn x" target="_blank" rel="noopener" href="https://x.com/intent/post?text=' + encodeURIComponent(t.text) + '">X で投稿</a></div></article>';
-    }).join("") || '<div class="empty">ツイートはまだありません。Claude が作ると tweets/ に入ります</div>';
+        '<a class="pill-btn x" target="_blank" rel="noopener" href="https://x.com/intent/post?text=' + encodeURIComponent(t.text) + '">X で投稿</a>' +
+        (isPosted(t) ? "" : '<button class="pill-btn done-btn" type="button" data-done="' + i + '">✅ 投稿した</button>') + "</div></article>";
+    }).join("") + postedToggle(postedN) || '<div class="empty">ツイートはまだありません。Claude が作ると tweets/ に入ります</div>';
+    if (!list.length && postedN) $("tweets").innerHTML = '<div class="empty">投稿待ちのツイートはありません</div>' + postedToggle(postedN);
     $("tweets").onclick = function (e) {
       var b = e.target.closest("[data-copy]");
       if (b) copy(list[Number(b.dataset.copy)].text);
+      var d = e.target.closest("[data-done]");
+      if (d) markPosted(list[Number(d.dataset.done)]);
+      if (e.target.closest("[data-toggle]")) { showPosted = !showPosted; renderAll(); }
     };
-    $("tweets-count").textContent = list.filter(function (t) { return t.status === "ready"; }).length + " 件 投稿待ち";
+    $("tweets-count").textContent = all.filter(function (t) { return t.status === "ready" && !isPosted(t); }).length + " 件 投稿待ち";
   }
 
   // ---------------------------------------------------------------- 予約投稿
@@ -172,15 +212,16 @@
 
   function renderPosts() {
     var list = (log.posts || []).filter(inProject);
-    var upcoming = list.filter(function (p) { return p.status === "scheduled"; });
-    var done = list.filter(function (p) { return p.status !== "scheduled"; });
+    var upcoming = list.filter(function (p) { return p.status === "scheduled" && !isPosted(p); });
+    var done = showPosted ? list.filter(isPosted) : [];
+    var postedN = list.filter(isPosted).length;
     var next = upcoming.find(function (p) { return p.atUnix > Date.now() / 1000 - 3600; });
     $("posts").innerHTML = upcoming.concat(done).map(function (p, i) {
       var pl = PLAT[p.platform] || PLAT.instagram;
-      return '<article class="post ' + esc(p.status) + (p === next ? " next" : "") + '" id="post-' + esc(p.id) + '" data-i="' + i + '">' +
+      return '<article class="post ' + (isPosted(p) ? "posted" : esc(p.status)) + (p === next ? " next" : "") + '" id="post-' + esc(p.id) + '" data-i="' + i + '">' +
         '<div class="post-top"><span class="post-when mono">' + esc(whenLabel(p.atUnix)) + "</span>" + badge(p.project) +
         '<span class="pbadge plat">' + pl[0] + " " + pl[1] + "</span>" +
-        '<span class="post-cd mono" data-at="' + p.atUnix + '">' + (p.status === "scheduled" ? countdown(p.atUnix) : "投稿済み " + esc(p.posted || "")) + "</span></div>" +
+        '<span class="post-cd mono" data-at="' + p.atUnix + '">' + (!isPosted(p) ? countdown(p.atUnix) : "投稿済み " + esc(p.posted || "")) + "</span></div>" +
         '<h3 class="post-title">' + esc(p.title || p.id) + "</h3>" +
         '<div class="post-imgs">' + p.images.map(function (u, j) {
           return '<a href="' + esc(u) + '" target="_blank" rel="noopener"><img loading="lazy" src="' + esc(u) + '" alt="' + (j + 1) + '枚目"><b>' + (j + 1) + "</b></a>";
@@ -190,15 +231,19 @@
         '<button class="pill-btn" type="button" data-act="copy">📋 キャプションをコピー</button>' +
         '<button class="pill-btn x" type="button" data-act="share">📤 ' + pl[1] + 'に送る</button>' +
         '<button class="pill-btn" type="button" data-act="save">💾 画像を保存</button>' +
+        (isPosted(p) ? "" : '<button class="pill-btn done-btn" type="button" data-act="done">✅ 投稿した</button>') +
         "</div></article>";
-    }).join("") || '<div class="empty">予約投稿はまだありません。Claude に「◯日の◯時に投稿」と頼むと posts/ に入ります</div>';
+    }).join("") || '<div class="empty">' + (postedN ? "予定の投稿はありません" : "予約投稿はまだありません。Claude に「◯日の◯時に投稿」と頼むと posts/ に入ります") + "</div>";
+    $("posts").innerHTML += postedToggle(postedN);
     var all = upcoming.concat(done);
     $("posts").onclick = function (e) {
+      if (e.target.closest("[data-toggle]")) { showPosted = !showPosted; return renderAll(); }
       var b = e.target.closest("[data-act]");
       if (!b) return;
       var p = all[Number(b.closest(".post").dataset.i)];
       var act = b.dataset.act;
       if (act === "copy") return copy(p.text);
+      if (act === "done") return markPosted(p);
       b.disabled = true;
       var label = b.textContent;
       b.textContent = "画像を準備中…";

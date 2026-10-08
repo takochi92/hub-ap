@@ -39,7 +39,11 @@
     }).then(function (r) {
       clearTimeout(timer);
       if (r.status === 401 || r.status === 403 || r.status === 404) {
-        var e = new Error("合い鍵が使えませんでした（期限切れ・まちがい・権限なし）");
+        var t = getToken();
+        var hint = t.indexOf("github_pat_") === 0 && t.length !== 93
+          ? "読み取れた合い鍵が " + t.length + " 文字でした（正しくは93文字）。コピーのときに途中で切れたか、余分な文字が入っています"
+          : "GitHub に断られました（" + r.status + "）。合い鍵の期限切れ・まちがい、または claude-hub を選んでいない可能性があります";
+        var e = new Error("合い鍵が使えませんでした。" + hint);
         e.auth = true;
         throw e;
       }

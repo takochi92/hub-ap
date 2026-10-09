@@ -77,3 +77,29 @@ body::after{display:block;content:"";position:fixed;inset:0;width:auto;height:au
 @keyframes crew-shadow{0%,100%{transform:scaleX(1);opacity:.7}50%{transform:scaleX(.83);opacity:.45}}
 @keyframes crew-blink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.08)}}
 @media(prefers-reduced-motion:reduce){.studio-wires .wire,.wire-pulse,.avatar-body,.avatar-eyes,.avatar-shadow{animation:none!important}.studio-wires .wire-pulse{opacity:0}.avatar-body,.avatar-eyes,.avatar-shadow{transform:none}}
+
+/* Phone control room: all companions visible without horizontal scrolling. */
+.studio-mobile-wires{display:none}
+@media(max-width:760px){
+ .studio-scroll{overflow:visible;padding:8px 0 12px}
+ .studio-network{min-width:0;min-height:0;grid-template-columns:minmax(0,1fr);gap:30px}
+ .studio-sources,.studio-outputs{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto;gap:7px}
+ .studio .project-overview{grid-template-rows:auto;gap:14px;margin:0 22px}
+ .studio .project-summary{min-height:155px;padding:15px 17px}
+ .studio-avatar{width:72px;height:72px;margin:8px 16px 8px 0}
+ .studio .project-summary-top button{font-size:13px;min-height:34px}
+ .studio .project-numbers strong{font-size:28px}
+ .studio .project-auto,.studio .project-summary small{font-size:10px}
+ .network-panel{padding:11px 8px;overflow-wrap:anywhere}
+ .node-code{font-size:7px;letter-spacing:0;margin-bottom:8px}
+ .node-heading{gap:3px}.node-heading strong{font-size:9px}
+ .node-value{font-size:23px}.node-value small{display:block;margin:4px 0 0;font-size:9px}
+ .network-panel p{font-size:9px;line-height:1.6}.node-link{font-size:9px}
+ .studio-caption::after{content:none}
+ .studio-wires{display:none}
+ .studio-mobile-wires{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
+ .studio-mobile-wires .wire{stroke-width:.5;opacity:.65;animation:route-glow 4.2s ease-in-out infinite}
+ .studio-mobile-wires .wire-pulse{stroke-width:.8;stroke-dasharray:4 96;stroke-linecap:round;animation:route-travel 4.8s linear infinite}
+ .studio-mobile-wires .mint{stroke:#a7ea77}.studio-mobile-wires .blue{stroke:#58b5ff;animation-delay:-1.6s}.studio-mobile-wires .pink{stroke:#fa5bb9;animation-delay:-3.2s}
+}
+@media(prefers-reduced-motion:reduce){.studio-mobile-wires .wire,.studio-mobile-wires .wire-pulse{animation:none!important}.studio-mobile-wires .wire-pulse{opacity:0}}
